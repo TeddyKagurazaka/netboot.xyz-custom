@@ -15,8 +15,8 @@ item iso_2304 ${space} Using iso
 item --gap Arch Linux Latest(~800M) from mirror.163.com
 item arch_iso ${space} archlinux-x86_64.iso
 item --gap Xubuntu from mirrors.tuna.tsinghua.edu.cn
-item xubuntu_iso ${space} xubuntu-23.04-desktop-amd64.iso(3.0G)
-item xubuntu_iso_mini ${space} xubuntu-23.04-minimal-amd64.iso(1.7G)
+item xubuntu_kernel_mini_2304 ${space} xubuntu-23.04-minimal-amd64.iso(using ubuntu 23.04 netboot)
+item xubuntu_kernel_2304 ${space} xubuntu-23.04-desktop-amd64.iso(using ubuntu 23.04 netboot)
 
 choose custom_choice || goto custom_exit
 echo ${cls}
@@ -50,14 +50,16 @@ kernel http://boot.netboot.xyz/memdisk raw iso
 initrd http://mirrors.163.com/archlinux/iso/latest/archlinux-x86_64.iso
 boot || goto custom_exit
 
-:xubuntu_iso
-kernel http://boot.netboot.xyz/memdisk raw iso
-initrd http://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/xubuntu/releases/23.04/release/xubuntu-23.04-desktop-amd64.iso
+:xubuntu_kernel_mini_2304
+kernel http://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/linux
+initrd http://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/initrd
+imgargs vmlinuz root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=http://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/xubuntu/releases/23.04/release/xubuntu-23.04-minimal-amd64.iso ---
 boot || goto custom_exit
 
-:xubuntu_iso_mini
-kernel http://boot.netboot.xyz/memdisk raw iso
-initrd http://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/xubuntu/releases/23.04/release/xubuntu-23.04-minimal-amd64.iso
+:xubuntu_kernel_2304
+kernel http://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/linux
+initrd http://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/initrd
+imgargs vmlinuz root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=http://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/xubuntu/releases/23.04/release/xubuntu-23.04-desktop-amd64.iso ---
 boot || goto custom_exit
 
 :option_three
