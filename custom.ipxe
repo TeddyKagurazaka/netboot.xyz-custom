@@ -138,7 +138,7 @@ goto sub_boot
 
 :sub_boot
 imgfree
-iseq ${os_arch} amd64 && set ubuntu_iso_url http://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/xubuntu/releases/23.04/release/xubuntu-23.04-minimal-amd64.iso ||
+iseq ${os_arch} amd64 && set ubuntu_iso_url http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/${codename}/ubuntu-${version_number}-live-server-${os_arch}.iso ||
 iseq ${os_arch} arm64 && set ubuntu_iso_url http://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/releases/${version_number}/release/ubuntu-${version_number}-live-server-${os_arch}.iso ||
 isset ${dhcp-server} && set netboot_params ip=dhcp url=${ubuntu_iso_url} || set netboot_params
 echo Loading Ubuntu Subiquity Network Installer...
