@@ -1,12 +1,40 @@
 #!ipxe
 ###
-### netboot.xyz-custom menu
+### for use with mirror.163.com
 ###
 
-:start
-echo Hello world!
-sleep 10
+:custom
+clear custom_choice
+menu This is a Test Menu
+item --gap Ubuntu 23.04 Live Server(2G)
+item kernel_2304 ${space} Using kernel and initrd
+item iso_2304 ${space} Using iso
+item --gap Arch Linux Latest(~800M)
+item arch_iso ${space} Using iso
+choose custom_choice || goto custom_exit
+echo ${cls}
+goto ${custom_choice}
 goto custom_exit
 
+:kernel_2304
+kernel https://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/linux
+initrd https://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/initrd
+imgargs vmlinuz root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=https://releases.ubuntu.com/23.04/ubuntu-23.04-live-server-amd64.iso ---
+boot || goto custom_exit
+
+:iso_2304
+kernel https://boot.netboot.xyz/memdisk raw iso
+initrd https://mirrors.163.com/ubuntu-releases/23.04/ubuntu-23.04-live-server-amd64.iso
+boot || goto custom_exit
+
+:arch_iso
+kernel https://boot.netboot.xyz/memdisk raw iso
+initrd https://mirrors.163.com/archlinux/iso/latest/archlinux-x86_64.iso
+boot || goto custom_exit
+
+:option_three
+echo Chains into another menu...
+chain custom1.ipxe || goto custom
+
 :custom_exit
-exit 0
+exit
