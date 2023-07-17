@@ -1,58 +1,156 @@
 #!ipxe
-###
-### for use with mirror.163.com
-###
+
+# Ubuntu Operating System
+# https://www.ubuntu.com
+
+goto ${menu}
 
 :custom
-clear custom_choice
-menu This is a Test Menu
-item --gap Ubuntu 23.04 Live Desktop(5G)
-item kernel_desktop_2304 ${space} Using kernel and initrd
-item --gap Ubuntu 23.04 Live Server(2G)
-item kernel_2304 ${space} Using kernel and initrd
-item --gap Arch Linux Latest(~800M)
-item arch_iso ${space} archlinux-x86_64.iso
-item --gap Xubuntu
-item xubuntu_kernel_2304 ${space} xubuntu-23.04-desktop-amd64.iso(using ubuntu 23.04 netboot)
-item xubuntu_kernel_mini_2304 ${space} xubuntu-23.04-minimal-amd64.iso(using ubuntu 23.04 netboot)
+set os Ubuntu
+set os_arch ${arch}
+iseq ${os_arch} x86_64 && set os_arch amd64 ||
+iseq ${os_arch} arm64 && set os_arch arm64 ||
+clear ubuntu_version
+clear install_type
+clear older_release
+clear install_url
+set install_type deb
+set install_priority critical
+menu ${os} - ${os_arch}
+item --gap Latest Releases
+item lunar ${space} ${os} 23.04 Lunar Lobster
+item kinetic ${space} ${os} 22.10 Kinetic Kudu
+item jammy ${space} ${os} 22.04 LTS Jammy Jellyfish
+item focal ${space} ${os} 20.04 LTS Focal Fossa (Subiquity)
+item focal-legacy ${space} ${os} 20.04 LTS Focal Fossa (Legacy)
+item bionic ${space} ${os} 18.04 LTS Bionic Beaver
+item xenial ${space} ${os} 16.04 LTS Xenial Xerus
+item trusty ${space} ${os} 14.04 LTS Trusty Tahr
+item --gap Older Releases
+item older_release ${space} Set release codename...
+choose ubuntu_version || goto ubuntu_exit
+iseq ${ubuntu_version} older_release && goto older_release ||
+iseq ${ubuntu_version} focal && set install_type sub ||
+iseq ${ubuntu_version} jammy && set install_type sub ||
+iseq ${ubuntu_version} kinetic && set install_type sub ||
+iseq ${ubuntu_version} lunar && set install_type sub ||
+iseq ${ubuntu_version} focal-legacy && set ubuntu_version focal ||
+iseq ${install_type} sub && goto boot_type ||
+iseq ${os_arch} arm64 && echo "arm64 not supported on legacy network installs, please use 20.04 Subiquity and up" && sleep 5 && goto ubuntu ||
+goto mirrorcfg
 
-choose custom_choice || goto custom_exit
+:older_release
+set older_release true
+set ubuntu_mirror http://old-releases.ubuntu.com
+echo Setting mirror to ${ubuntu_mirror}
+clear ubuntu_version
+echo -n Please set enter code name of release: ${} && read ubuntu_version
+set dir ${ubuntu_base_dir}/dists/${ubuntu_version}-updates/main/installer-${os_arch}/current/images/netboot/
+goto boot_type
+
+:mirrorcfg
+set mirrorcfg mirror/suite=${ubuntu_version}
+set dir ${ubuntu_base_dir}/dists/${ubuntu_version}-updates/main/installer-${os_arch}/current/images/netboot/
+iseq ${ubuntu_version} focal && set dir ${ubuntu_base_dir}/dists/${ubuntu_version}-updates/main/installer-${os_arch}/current/legacy-images/netboot/ ||
+goto boot_type
+
+:boot_type
+menu ${os} [${ubuntu_version}] Installer
+item --gap Install types
+item install ${space} Install
+item rescue ${space} Rescue Mode
+item automated ${space} Specify preseed/autoinstall url...
+iseq ${install_type} deb && item priority ${space} Change install priority [ ${install_priority} ] ||
+choose --default ${type} type || goto ubuntu
 echo ${cls}
-goto ${custom_choice}
-goto custom_exit
+goto deb_${type}
 
-:kernel_desktop_2304
-kernel http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/23.04/netboot/amd64/linux
-initrd http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/23.04/netboot/amd64/initrd
-imgargs linux root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=https://mirrors.163.com/ubuntu-releases/23.04/ubuntu-23.04-desktop-amd64.iso ---
-boot || goto custom_exit
+:deb_rescue
+iseq ${install_type} deb && set install_params rescue/enable=true ||
+iseq ${install_type} sub && set install_params systemd.unit=rescue.target ||
+goto deb_install
 
-:kernel_2304
-kernel http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/23.04/netboot/amd64/linux
-initrd http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/23.04/netboot/amd64/initrd
-imgargs linux root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=https://mirrors.163.com/ubuntu-releases/23.04/ubuntu-23.04-live-server-amd64.iso ---
-boot || goto custom_exit
+:deb_priority
+iseq ${install_priority} critical && set install_priority low || set install_priority critical
+goto boot_type
 
-:arch_iso
-kernel http://boot.netboot.xyz/memdisk raw iso
-initrd http://mirrors.tuna.tsinghua.edu.cn/archlinux/iso/latest/archlinux-x86_64.iso
-boot || goto custom_exit
+:deb_automated
+iseq ${install_type} deb && set install_name preseed ||
+iseq ${install_type} sub && set install_name autoinstall ||
+echo -n Specify ${install_name} URL for ${os} ${ubuntu_version}: && read install_url
+iseq ${install_type} deb && set install_params auto=true priority=${install_priority} preseed/url=${install_url} ||
+iseq ${install_type} sub && set install_params autoinstall ds=nocloud-net;s=${install_url} ||
+goto deb_install
 
-:xubuntu_kernel_mini_2304
-kernel http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/23.04/netboot/amd64/linux
-initrd http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/23.04/netboot/amd64/initrd
-imgargs linux root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=http://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/xubuntu/releases/23.04/release/xubuntu-23.04-minimal-amd64.iso ---
-boot || goto custom_exit
+:deb_install
+iseq ${install_type} deb && goto deb_boot ||
+iseq ${install_type} sub && goto ${ubuntu_version}_${os_arch} ||
 
-:xubuntu_kernel_2304
-kernel http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/23.04/netboot/amd64/linux
-initrd http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/23.04/netboot/amd64/initrd
-imgargs linux root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=http://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/xubuntu/releases/23.04/release/xubuntu-23.04-desktop-amd64.iso ---
-boot || goto custom_exit
+:deb_boot
+echo Loading Ubuntu PXE netboot installer
+set dir ${dir}ubuntu-installer/${os_arch}
+imgfree
+kernel ${ubuntu_mirror}/${dir}/linux ${install_params} ${mirrorcfg} initrd=initrd.magic ${cmdline}
+initrd ${ubuntu_mirror}/${dir}/initrd.gz
+echo
+echo MD5sums:
+md5sum linux initrd.gz
+boot
 
-:option_three
-echo Chains into another menu...
-chain custom1.ipxe || goto custom
+:focal_amd64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/20.04.6-a1b16d57/
+set codename focal
+set version_number 20.04.6
+goto sub_boot
+:focal_arm64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/20.04.5-60af20cc/
+set codename focal
+set version_number 20.04.5
+goto sub_boot
+:jammy_amd64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/22.04.2-7d91a596/
+set codename jammy
+set version_number 22.04.2
+goto sub_boot
+:jammy_arm64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/22.04.2-75576b2c/
+set codename jammy
+set version_number 22.04.2
+goto sub_boot
+:kinetic_amd64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/22.10-a9990c06/
+set codename kinetic
+set version_number 22.10
+goto sub_boot
+:kinetic_arm64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/22.10-0c7dfe1c/
+set codename kinetic
+set version_number 22.10
+goto sub_boot
+:lunar_amd64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/23.04-e157c0e4/
+set codename lunar
+set version_number 23.04
+goto sub_boot
+:kinetic_arm64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/23.04-65472f2c/
+set codename kinetic
+set version_number 23.04
+goto sub_boot
 
-:custom_exit
-exit
+:sub_boot
+imgfree
+iseq ${os_arch} amd64 && set ubuntu_iso_url http://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/${codename}/ubuntu-${version_number}-live-server-${os_arch}.iso ||
+iseq ${os_arch} arm64 && set ubuntu_iso_url http://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/releases/${version_number}/release/ubuntu-${version_number}-live-server-${os_arch}.iso ||
+isset ${dhcp-server} && set netboot_params ip=dhcp url=${ubuntu_iso_url} || set netboot_params
+echo Loading Ubuntu Subiquity Network Installer...
+kernel ${kernel_url}vmlinuz root=/dev/ram0 ramdisk_size=1500000 ${netboot_params} ${install_params} initrd=initrd.magic ${cmdline}
+initrd ${kernel_url}initrd
+echo
+echo MD5sums:
+md5sum vmlinuz initrd
+boot
+
+:ubuntu_exit
+clear menu
+exit 0
