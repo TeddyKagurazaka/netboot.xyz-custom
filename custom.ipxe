@@ -6,14 +6,18 @@
 :custom
 clear custom_choice
 menu This is a Test Menu
-item --gap Ubuntu 23.04 Live Desktop(5G)
+item --gap Ubuntu 23.04 Live Desktop(5G) from mirror.163.com
 item kernel_desktop_2304 ${space} Using kernel and initrd
 item iso_desktop_2304 ${space} Using iso
-item --gap Ubuntu 23.04 Live Server(2G)
+item --gap Ubuntu 23.04 Live Server(2G) from mirror.163.com
 item kernel_2304 ${space} Using kernel and initrd
 item iso_2304 ${space} Using iso
-item --gap Arch Linux Latest(~800M)
-item arch_iso ${space} Using iso
+item --gap Arch Linux Latest(~800M) from mirror.163.com
+item arch_iso ${space} archlinux-x86_64.iso
+item --gap Xubuntu from mirrors.tuna.tsinghua.edu.cn
+item xubuntu_iso ${space} xubuntu-23.04-desktop-amd64.iso(3.0G)
+item xubuntu_iso_mini ${space} xubuntu-23.04-minimal-amd64.iso(1.7G)
+
 choose custom_choice || goto custom_exit
 echo ${cls}
 goto ${custom_choice}
@@ -44,6 +48,16 @@ boot || goto custom_exit
 :arch_iso
 kernel https://boot.netboot.xyz/memdisk raw iso
 initrd https://mirrors.163.com/archlinux/iso/latest/archlinux-x86_64.iso
+boot || goto custom_exit
+
+:xubuntu_iso
+kernel https://boot.netboot.xyz/memdisk raw iso
+initrd https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/xubuntu/releases/23.04/release/xubuntu-23.04-desktop-amd64.iso
+boot || goto custom_exit
+
+:xubuntu_iso_mini
+kernel https://boot.netboot.xyz/memdisk raw iso
+initrd https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/xubuntu/releases/23.04/release/xubuntu-23.04-minimal-amd64.iso
 boot || goto custom_exit
 
 :option_three
