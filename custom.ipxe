@@ -3,8 +3,6 @@
 # Ubuntu Operating System
 # https://www.ubuntu.com
 
-goto ${menu}
-
 :custom
 set os Ubuntu
 set os_arch ${arch}
