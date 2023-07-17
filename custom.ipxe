@@ -6,6 +6,9 @@
 :custom
 clear custom_choice
 menu This is a Test Menu
+item --gap Ubuntu 23.04 Live Desktop(5G)
+item kernel_desktop_2304 ${space} Using kernel and initrd
+item iso_desktop_2304 ${space} Using iso
 item --gap Ubuntu 23.04 Live Server(2G)
 item kernel_2304 ${space} Using kernel and initrd
 item iso_2304 ${space} Using iso
@@ -16,10 +19,21 @@ echo ${cls}
 goto ${custom_choice}
 goto custom_exit
 
+:kernel_desktop_2304
+kernel https://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/linux
+initrd https://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/initrd
+imgargs vmlinuz root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=https://mirrors.163.com/ubuntu-releases/23.04/ubuntu-23.04-desktop-amd64.iso ---
+boot || goto custom_exit
+
+:iso_desktop_2304
+kernel https://boot.netboot.xyz/memdisk raw iso
+initrd https://mirrors.163.com/ubuntu-releases/23.04/ubuntu-23.04-desktop-amd64.iso
+boot || goto custom_exit
+
 :kernel_2304
 kernel https://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/linux
 initrd https://mirrors.163.com/ubuntu-releases/23.04/netboot/amd64/initrd
-imgargs vmlinuz root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=https://releases.ubuntu.com/23.04/ubuntu-23.04-live-server-amd64.iso ---
+imgargs vmlinuz root=/dev/ram0 ramdisk_size=1500000 ip=dhcp iso-url=https://mirrors.163.com/ubuntu-releases/23.04/ubuntu-23.04-live-server-amd64.iso ---
 boot || goto custom_exit
 
 :iso_2304
